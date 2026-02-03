@@ -1,0 +1,7 @@
+{
+  "name": "tallowcoast",
+  "compatibility_date": "2026-02-03",
+  "assets": {
+    "directory": "./client/dist"
+  }
+}
