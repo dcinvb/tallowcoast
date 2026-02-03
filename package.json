@@ -1,0 +1,11 @@
+{
+  "name": "tallow-coast",
+  "private": true,
+  "description": "Tallow Coast landing page and waitlist",
+  "scripts": {
+    "dev:client": "npm run dev --prefix client",
+    "dev:server": "npm run dev --prefix server",
+    "build": "npm run build --prefix client",
+    "start": "npm run start --prefix server"
+  }
+}
