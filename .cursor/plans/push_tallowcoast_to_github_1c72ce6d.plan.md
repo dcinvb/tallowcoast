@@ -1,40 +1,74 @@
 ---
 name: Push TallowCoast to GitHub
-overview: Initialize Git in TallowCoast, create an initial commit with message "updated project files", connect to a GitHub remote, and push.
+overview: Fix push rejection by pulling remote changes (GitHub repo has commits you don't have locally), then push.
 todos:
-  - id: todo-1770144215405-3mqxc05cu
-    content: ""
+  - id: todo-pull-then-push
+    content: "Pull origin main then push (merge or rebase)"
     status: pending
 isProject: false
 ---
 
-# Push TallowCoast to GitHub
+# Fix: Push TallowCoast to GitHub
 
-The project currently has **no Git repository** (no `.git` folder). The following steps will initialize it, commit, and push to GitHub.
+## What’s going wrong
 
-## Prerequisites
+- **Push is rejected** because the remote `main` branch has commits (e.g. README or license created on GitHub) that you don’t have locally.
+- **`git pull`** failed with “no tracking information” because the local `main` branch wasn’t set to track `origin/main` yet.
 
-- **Git** installed and configured (name/email set).
-- A **GitHub repository** for this project. Either:
-  - Create one at [github.com/new](https://github.com/new) (e.g. named `TallowCoast`), leave it empty (no README/license), and note the repo URL (e.g. `https://github.com/YOUR_USERNAME/TallowCoast.git`), or
-  - Use GitHub CLI: `gh repo create TallowCoast --private --source=. --remote=origin --push` (after the steps below, this can do remote + push in one go).
+You already have: local commit “Updated Project Files”, remote `origin` = `https://github.com/dcinvb/tallowcoast`, and branch `main`.
 
-## Steps
+## Fix (choose one)
 
-1. **Initialize Git and create first commit** (from `c:\Projects\TallowCoast`):
-  - `git init`
-  - `git add .`
-  - `git commit -m "updated project files"`
-2. **Connect to GitHub and push**:
-  - Add remote (replace with your actual repo URL):
-    - `git remote add origin https://github.com/YOUR_USERNAME/TallowCoast.git`
-  - Ensure branch name (GitHub default is `main`):
-    - `git branch -M main`
-  - Push:
-    - `git push -u origin main`
+### Option A — Merge (recommended)
+
+From `c:\Projects\TallowCoast`:
+
+1. Pull and merge remote into your branch:
+   ```bash
+   git pull origin main
+   ```
+2. If Git opens an editor for a merge commit message, save and close.
+3. If there are merge conflicts, resolve them, then:
+   ```bash
+   git add .
+   git commit -m "Merge remote main"
+   ```
+4. Push and set upstream:
+   ```bash
+   git push -u origin main
+   ```
+
+### Option B — Rebase (linear history)
+
+1. Pull with rebase:
+   ```bash
+   git pull origin main --rebase
+   ```
+2. If conflicts appear, resolve, then:
+   ```bash
+   git add .
+   git rebase --continue
+   ```
+3. Push:
+   ```bash
+   git push -u origin main
+   ```
+
+### Option C — Force push (replace GitHub with your local repo)
+
+Use this if you're fine with **making GitHub match your local project exactly**. The repo’s current commit(s) on GitHub (e.g. the auto-created README) will be replaced by your local history; you do **not** need to delete the README (or any file) on GitHub first.
+
+From `c:\Projects\TallowCoast`:
+
+```bash
+git push -u origin main --force
+```
+
+- **When to use:** Only you use this repo, or you’re sure no one else’s work on `main` will be lost.
+- **Result:** GitHub’s `main` will show your “Updated Project Files” commit and your project files (including your own README).
 
 ## Notes
 
-- Existing [.gitignore](.gitignore) at the root (and in `client/`, `server/`) will keep `node_modules`, `.env`, and other ignored paths out of the repo.
-- If you use **GitHub CLI** and prefer it to create the repo and push for you, run step 1 (init, add, commit), then from the same directory:
+- After the first successful push, future pushes are just: `git push`.
+- If the GitHub repo only added a README/license, Option A or B will usually complete without conflicts. Option C skips merging entirely by overwriting the remote.
 
