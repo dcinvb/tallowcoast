@@ -43,9 +43,15 @@ export default function App() {
         </header>
         <section className="hero">
           <div className="hero-content">
-            <h1>Natural skin care from grass-fed beef tallow</h1>
+            <h1>
+              Natural skin care from
+              <br />
+              grass-fed beef tallow
+            </h1>
             <p className="hero-subline">
-              Simple, honest ingredients. No fillers. Just quality tallow from pasture-raised cattle.
+              Simple, honest ingredients. No fillers.
+              <br />
+              Just quality tallow from pasture-raised cattle.
             </p>
             <button type="button" onClick={scrollToWaitlist} className="cta-button">
               Get notified at launch
