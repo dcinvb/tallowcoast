@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
@@ -11,6 +12,9 @@ const DATA_DIR = process.env.DATA_DIR || join(__dirname, 'data');
 const DATA_FILE = process.env.DATA_FILE || join(DATA_DIR, 'waitlist.json');
 const PORT = process.env.PORT || 3001;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5173';
+
+// Google Apps Script webhook URL
+const GOOGLE_APPS_SCRIPT_URL = process.env.GOOGLE_APPS_SCRIPT_URL;
 
 const app = express();
 app.use(express.json());
@@ -49,6 +53,41 @@ async function appendWaitlist(email) {
   return entry;
 }
 
+// Google Apps Script webhook integration
+async function appendToGoogleSheet(email, timestamp) {
+  if (!GOOGLE_APPS_SCRIPT_URL) {
+    console.warn('Google Apps Script URL not configured - skipping sheet append');
+    return;
+  }
+
+  try {
+    const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email,
+        timestamp,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Apps Script responded with ${response.status}`);
+    }
+
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || 'Unknown error from Apps Script');
+    }
+
+    console.log(`Added ${email} to Google Sheet via Apps Script`);
+  } catch (error) {
+    console.error('Error writing to Google Sheet:', error.message);
+    throw error;
+  }
+}
+
 app.post('/api/waitlist', async (req, res) => {
   const email = req.body?.email;
   if (email === undefined || email === null) {
@@ -62,7 +101,16 @@ app.post('/api/waitlist', async (req, res) => {
     return res.status(400).json({ success: false, error: 'Please enter a valid email address.' });
   }
   try {
-    await appendWaitlist(trimmed);
+    const entry = await appendWaitlist(trimmed);
+    
+    // Also append to Google Sheets if configured
+    try {
+      await appendToGoogleSheet(entry.email, entry.subscribedAt);
+    } catch (sheetError) {
+      // Log error but don't fail the request - local backup exists
+      console.error('Failed to write to Google Sheet:', sheetError.message);
+    }
+    
     return res.status(200).json({ success: true });
   } catch (err) {
     console.error('Waitlist write error:', err);
